@@ -180,12 +180,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        String str = data.getStringArrayListExtra("android.speech.extra.RESULTS").get(0);
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("(function() { var d = document.getElementsByTagName('textarea').length; document.getElementsByTagName('textarea')[d-1].value='");
-        stringBuilder.append(str);
-        stringBuilder.append("'; document.querySelector('button.absolute').click(); })();");
-        webView.evaluateJavascript(stringBuilder.toString(), null);
+        try {
+            String str = data.getStringArrayListExtra("android.speech.extra.RESULTS").get(0);
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("(function() { var d = document.getElementsByTagName('textarea').length; document.getElementsByTagName('textarea')[d-1].value='");
+            stringBuilder.append(str);
+            stringBuilder.append("'; document.querySelector('button.absolute').click(); })();");
+            webView.evaluateJavascript(stringBuilder.toString(), null);
+        }catch(Exception e){
+            Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
