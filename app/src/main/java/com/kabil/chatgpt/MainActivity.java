@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -16,17 +17,22 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
 import java.util.Locale;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
     WebView webView;
@@ -34,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     ProgressDialog progressDialog;
     private ActivityResultLauncher<Intent> someActivityResultLauncher;
     Intent data;
-
+    TextToSpeech textToSpeech;
     public String USER_AGENT = "(Android " + Build.VERSION.RELEASE + ") Chrome/110.0.5481.63 Mobile";
 
 
@@ -72,6 +78,33 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.getDefault());
+                }
+            }
+        });
+        // Create an UtteranceProgressListener object to handle callbacks
+        UtteranceProgressListener utteranceProgressListener = new UtteranceProgressListener() {
+            @Override
+            public void onStart(String utteranceId) {
+                // Called when TTS starts speaking
+            }
+
+            @Override
+            public void onDone(String utteranceId) {
+                // Called when TTS finishes speaking
+            }
+
+            @Override
+            public void onError(String utteranceId) {
+                // Called when TTS encounters an error
+            }
+        };
+        // Add the UtteranceProgressListener to the TextToSpeech object
+        textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener);
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -114,8 +147,37 @@ public class MainActivity extends AppCompatActivity {
             case R.id.mic:
                 onMicPressed();
                 break;
+            case R.id.speak:
+                onSpeakerPressed();
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onSpeakerPressed() {
+        try {
+
+            String allParagraph = "var paragraphs = document.getElementsByTagName('p');"
+                    + "var combinedText='';"
+                    + "for (var i =0; i < paragraphs.length; i++) {"
+                    + "combinedText+= paragraphs[i].textContent;"
+                    + " }combinedText;";
+
+            webView.evaluateJavascript(allParagraph, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    // Store the paragraph content in a string object
+
+                    String paragraphString = value;
+                    String utteranceId = UUID.randomUUID().toString();
+                    textToSpeech.speak(paragraphString, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+
+                }
+            });
+
+        } catch (Exception e) {
+            Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void onMicPressed() {
@@ -183,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
             stringBuilder.append(str);
             stringBuilder.append("'; document.querySelector('button.absolute').click(); })();");
             webView.evaluateJavascript(stringBuilder.toString(), null);
-        }catch(Exception e){
+        } catch (Exception e) {
             Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
