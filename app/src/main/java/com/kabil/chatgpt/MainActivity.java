@@ -243,7 +243,8 @@ public class MainActivity extends AppCompatActivity {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("(function() { var d = document.getElementsByTagName('textarea').length; document.getElementsByTagName('textarea')[d-1].value='");
             stringBuilder.append(str);
-            stringBuilder.append("'; document.querySelector('button.absolute').click(); })();");
+            stringBuilder.append("';document.querySelector('button.absolute').disabled = false;");
+            stringBuilder.append("document.querySelector('button.absolute').click(); })();");
             webView.evaluateJavascript(stringBuilder.toString(), null);
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
