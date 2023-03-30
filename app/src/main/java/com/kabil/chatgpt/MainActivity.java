@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> someActivityResultLauncher;
     Intent data;
     TextToSpeech textToSpeech;
+
+    int paragraphCount;
     public String USER_AGENT = "(Android " + Build.VERSION.RELEASE + ") Chrome/110.0.5481.63 Mobile";
 
 
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading Please Wait...");
-
+        paragraphCount = 1;
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -155,11 +157,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onSpeakerPressed() {
+        String allParagraph, paragraphLength;
+
         try {
 
-            String allParagraph = "var paragraphs = document.getElementsByTagName('p');"
+            allParagraph = "var paragraphs = document.getElementsByTagName('p');"
                     + "var combinedText='';"
-                    + "for (var i =0; i < paragraphs.length; i++) {"
+                    + "for (var i =" + paragraphCount + "-1; i < paragraphs.length; i++) {"
                     + "combinedText+= paragraphs[i].textContent;"
                     + " }combinedText;";
 
@@ -174,6 +178,15 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             });
+            paragraphLength = "(function() { return document.getElementsByTagName('p').length; })();";
+            webView.evaluateJavascript(paragraphLength, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    paragraphCount = Integer.parseInt(value);
+
+                }
+            });
+
 
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
